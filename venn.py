@@ -9,8 +9,8 @@ def connect_to_database(db_path):
 
 def fetch_restaurant_titles(con, table_name, column_name):
     metadata = MetaData()
-    restaurants = Table(table_name, metadata, autoload=True, autoload_with=con)
-    query = con.execute(restaurants.select().with_only_columns([getattr(restaurants.c, column_name)]))
+    restaurants = Table(table_name, metadata, autoload_with=con)
+    query = con.execute(restaurants.select().with_only_columns(getattr(restaurants.c, column_name)))
     results = query.fetchall()
     return pd.DataFrame(results, columns=['title'])
 

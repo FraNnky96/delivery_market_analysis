@@ -1,15 +1,14 @@
-from sqlalchemy import create_engine, Table, MetaData
+from sqlalchemy import create_engine, Table, MetaData, text
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import geopandas as gpd
 
 def connect_to_database(db_path):
     engine = create_engine(db_path)
     return engine.connect()
 
 def fetch_restaurant_data(con, query):
-    results = con.execute(query).fetchall()
+    results = con.execute(text(query)).fetchall()
     return results
 
 def create_dataframe(results, columns, source):
@@ -110,6 +109,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
