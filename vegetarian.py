@@ -44,7 +44,7 @@ region = gpd.read_file('map/régions_08.shp')
 region = region.to_crs(epsg=4326)  # Reproject to EPSG:4326 (WGS84)
 
 # Fetch and combine the data from all platforms
-all_restaurants = pd.concat([
+all_restaurants = pd.concat([ 
     fetch_data('databases/takeaway.db', queries['Takeaway'], 'Takeaway'),
     fetch_data('databases/deliveroo.db', queries['Deliveroo'], 'Deliveroo'),
     fetch_data('databases/ubereats.db', queries['UberEats'], 'UberEats')
@@ -57,13 +57,24 @@ fig, axes = plt.subplots(2, 2, figsize=(15, 12))
 platforms = ['Takeaway', 'Deliveroo', 'UberEats']
 colors = {'Takeaway': 'green', 'Deliveroo': 'blue', 'UberEats': 'red'}
 
-# Plot individual maps
+# Plot individual maps for each platform
 for i, platform in enumerate(platforms):
     ax = axes[i // 2, i % 2]  # Get the correct subplot axis
     region.plot(ax=ax, color='lightgrey', edgecolor='black')  # Plot regions
+
+    # Filter data for the current platform
     gdf_platform = all_restaurants[all_restaurants['platform'] == platform]
+    
+    # Calculate dynamic limits for the current platform's data
+    xmin, ymin, xmax, ymax = gdf_platform.total_bounds  # Get min and max of the platform data
+    ax.set_xlim(xmin - 0.1, xmax + 0.1)  # Add buffer around the data
+    ax.set_ylim(ymin - 0.1, ymax + 0.1)  # Add buffer around the data
+    
+    # Plot the platform's data
     alpha_value = 0.5 if platform == 'UberEats' else 1  # Adjust alpha for UberEats
     gdf_platform.plot(ax=ax, markersize=10, color=colors[platform], alpha=alpha_value, label=f'{platform} Restaurants')
+    
+    # Set title and labels for individual plots
     ax.set_title(f'{platform} Vegetarian Restaurants')
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
@@ -72,14 +83,27 @@ for i, platform in enumerate(platforms):
 # Plot combined map in the last subplot (bottom-right)
 ax_combined = axes[1, 1]  # Bottom-right subplot
 region.plot(ax=ax_combined, color='lightgrey', edgecolor='black')  # Plot regions
+
+# Plot data for each platform on the combined map
 for platform in platforms:
     gdf_platform = all_restaurants[all_restaurants['platform'] == platform]
     gdf_platform.plot(ax=ax_combined, markersize=10, color=colors[platform], alpha=alpha_value, label=f'{platform} Restaurants')
+
+# Get dynamic axis limits based on combined restaurant data
+combined_gdf = all_restaurants.copy()
+xmin, ymin, xmax, ymax = combined_gdf.total_bounds  # Get min and max of all restaurant data
+
+# Set dynamic limits with buffer
+ax_combined.set_xlim(xmin - 0.1, xmax + 0.1)
+ax_combined.set_ylim(ymin - 0.1, ymax + 0.1)
+
+# Set title and labels
 ax_combined.set_title('Combined Vegetarian Restaurants')
 ax_combined.set_xlabel('Longitude')
 ax_combined.set_ylabel('Latitude')
-ax_combined.legend()
 
-# Adjust layout to avoid overlap
+# Add legend and show the plot
+ax_combined.legend()
 plt.tight_layout()
 plt.show()
+
